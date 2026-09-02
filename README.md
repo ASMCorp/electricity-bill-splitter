@@ -106,7 +106,7 @@ Then promote the intended account with the bootstrap statement above.
 - `monthly_bills` has a unique `(bill_year, bill_month)` constraint. New rows must be drafts.
 - Publishing validates that the stored tariff snapshot matches its tariff version and that person totals reconcile to the bill.
 - Published rows cannot be edited. Reopen first; reopening and editing must be separate database operations.
-- Anonymous users cannot select `monthly_bills` directly. `published_monthly_bills` exposes only published rows and removes `display_name` from each public JSON person record.
+- Anonymous users cannot select `monthly_bills` directly. `published_monthly_bills` exposes only published rows and includes each member name stored with that published snapshot.
 - `audit_logs` records inserts/updates/deletes on profiles, tariffs, and monthly bills. Only admins can read it; clients cannot write it.
 - RLS still performs authorization even if a user bypasses the UI. The UI admin check is only an additional guard.
 

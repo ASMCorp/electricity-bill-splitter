@@ -49,17 +49,18 @@ export const database = {
     return data;
   },
   async members() {
-    const { data, error } = await requireClient().from("members").select("id,display_name,public_alias,is_active,created_at,updated_at").order("created_at", { ascending: true });
+    const { data, error } = await requireClient().from("members").select("id,display_name,is_active,created_at,updated_at").order("created_at", { ascending: true });
     if (error) throw error;
     return data;
   },
   async createMember(payload) {
-    const { data, error } = await requireClient().from("members").insert(payload).select().single();
+    const { data, error } = await requireClient().from("members").insert({ ...payload, public_alias: payload.display_name }).select().single();
     if (error) throw error;
     return data;
   },
   async updateMember(id, changes) {
-    const { data, error } = await requireClient().from("members").update(changes).eq("id", id).select().single();
+    const payload = "display_name" in changes ? { ...changes, public_alias: changes.display_name } : changes;
+    const { data, error } = await requireClient().from("members").update(payload).eq("id", id).select().single();
     if (error) throw error;
     return data;
   },

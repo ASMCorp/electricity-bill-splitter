@@ -23,14 +23,14 @@ export default function MonthlyBills({ bills, configured, loading, error }) {
           <p className="large-total">৳{formatMoney(detail.total_bill)}</p>
           <div className="published-people">
             {detail.people_snapshot.map((person) => (
-              <article key={`${person.position}-${person.public_alias}`}>
-                <strong>{person.public_alias}</strong>
+              <article key={`${person.position}-${person.display_name || person.public_alias}`}>
+                <strong>{person.display_name || person.public_alias}</strong>
                 <span>{person.ac_units.toFixed(2)} AC units</span>
                 <b>৳{formatMoney(person.total_amount)}</b>
               </article>
             ))}
           </div>
-          <p className="privacy-note">Only the public aliases stored with this published snapshot are shown.</p>
+          <p className="privacy-note">Names are stored with each published snapshot.</p>
         </section>
       </div>
     </main>

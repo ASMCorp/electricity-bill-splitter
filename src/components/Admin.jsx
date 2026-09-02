@@ -16,7 +16,7 @@ const DEFAULT_TARIFF_SLABS = [
 ];
 const peopleFromMembers = (members) => members
   .filter((member) => member.is_active)
-  .map((member) => ({ id: member.id, name: member.display_name, alias: member.public_alias, ac: "" }));
+  .map((member) => ({ id: member.id, name: member.display_name, ac: "" }));
 
 const billMatchesActiveRoster = (bill, members) => {
   const activeMembers = members.filter((member) => member.is_active);
@@ -25,7 +25,6 @@ const billMatchesActiveRoster = (bill, members) => {
   return activeMembers.every((member) => snapshot.some((person) => (
     person.member_id === member.id
     && person.display_name === member.display_name
-    && person.public_alias === member.public_alias
   )));
 };
 
@@ -52,9 +51,7 @@ export default function Admin({ configured, database, tariffs, onTariffCreated, 
   const [editingStatus, setEditingStatus] = useState("draft");
   const [members, setMembers] = useState([]);
   const [memberNames, setMemberNames] = useState({});
-  const [memberAliases, setMemberAliases] = useState({});
   const [newMemberName, setNewMemberName] = useState("");
-  const [newMemberAlias, setNewMemberAlias] = useState("");
   const [year, setYear] = useState(now.getFullYear());
   const [month, setMonth] = useState(now.getMonth() + 1);
   const [bill, setBill] = useState("");
@@ -263,7 +260,6 @@ export default function Admin({ configured, database, tariffs, onTariffCreated, 
       setPeople((item.people_snapshot || []).map((person, index) => ({
         id: person.member_id || index + 1,
         name: person.display_name,
-        alias: person.public_alias || "",
         ac: String(person.ac_units),
       })));
       return;
@@ -342,14 +338,14 @@ export default function Admin({ configured, database, tariffs, onTariffCreated, 
   const addMember = async (event) => {
     event.preventDefault(); setBusy(true); setMessage("");
     try {
-      const created = await database.createMember({ display_name: newMemberName.trim(), public_alias: newMemberAlias.trim() });
+      const created = await database.createMember({ display_name: newMemberName.trim() });
       setMembers((current) => [...current, created]);
       if (!editingId && created.is_active) {
-        setPeople((current) => [...current, { id: created.id, name: created.display_name, alias: created.public_alias, ac: "" }]);
+        setPeople((current) => [...current, { id: created.id, name: created.display_name, ac: "" }]);
       }
       setCalculatedDraft(null);
       setNewMemberName("");
-      setNewMemberAlias("");
+
       setMessage("Member added.");
     } catch (error) { setMessage(error.message); }
     finally { setBusy(false); }
@@ -369,11 +365,7 @@ export default function Admin({ configured, database, tariffs, onTariffCreated, 
         delete next[updated.id];
         return next;
       });
-      setMemberAliases((current) => {
-        const next = { ...current };
-        delete next[updated.id];
-        return next;
-      });
+
       setCalculatedDraft(null);
       setMessage("display_name" in changes ? "Member updated." : updated.is_active ? "Member restored." : "Member removed from new bills.");
     } catch (error) { setMessage(error.message); }
@@ -419,10 +411,10 @@ export default function Admin({ configured, database, tariffs, onTariffCreated, 
           {!requiredTariff && <p className="warning" role="status">No tariff applies to this bill month. Create an earlier tariff version first.</p>}
           <div className="people-section">
             <div className="section-title"><div><span className="eyebrow">Residents</span><h3>People and AC usage</h3></div></div>
-            <div className="people-labels" aria-hidden="true"><span>Name</span><span>Public alias</span><span>AC units</span></div>
-            <div className="admin-people">{people.length ? people.map((person, index) => <div className="person-fields" key={person.id}><span className="person-number" aria-hidden="true">{index + 1}</span><input aria-label="Name" value={person.name} readOnly disabled /><input aria-label={`Public alias for ${person.name}`} value={person.alias} readOnly disabled /><input aria-label={`AC units for ${person.name}`} inputMode="decimal" placeholder="0" value={person.ac} onChange={(e) => { setPeople((list) => list.map((p) => p.id === person.id ? { ...p, ac: e.target.value } : p)); setCalculatedDraft(null); }} disabled={editingStatus === "published"} /></div>) : <p className="empty-list">Create a roster member before calculating a bill.</p>}</div>
+            <div className="people-labels" aria-hidden="true"><span>Name</span><span>AC units</span></div>
+            <div className="admin-people">{people.length ? people.map((person, index) => <div className="person-fields" key={person.id}><span className="person-number" aria-hidden="true">{index + 1}</span><input aria-label="Name" value={person.name} readOnly disabled /><input aria-label={`AC units for ${person.name}`} inputMode="decimal" placeholder="0" value={person.ac} onChange={(e) => { setPeople((list) => list.map((p) => p.id === person.id ? { ...p, ac: e.target.value } : p)); setCalculatedDraft(null); }} disabled={editingStatus === "published"} /></div>) : <p className="empty-list">Create a roster member before calculating a bill.</p>}</div>
           </div>
-          {reviewedDraft && <section className="calculated-split" aria-label="Calculated split"><div className="calculated-split-heading"><div><span className="eyebrow">Review</span><h3>Calculated split</h3></div><strong>৳{formatMoney(reviewedDraft.total_bill)}</strong></div><div className="calculated-split-list">{reviewedDraft.people_snapshot.map((person, index) => <article key={person.position}><span className="person-number" aria-hidden="true">{index + 1}</span><div><strong>{person.public_alias}</strong><small>{person.ac_units.toFixed(2)} AC units</small></div><span className="calculated-amount">৳{formatMoney(person.total_amount)}</span></article>)}</div><div className="calculated-actions"><button className="primary-button action-publish action-large" type="button" aria-label="Publish calculated bill" onClick={publishCalculated} disabled={busy}>{busy ? "Publishing…" : "Publish bill"}</button></div></section>}
+          {reviewedDraft && <section className="calculated-split" aria-label="Calculated split"><div className="calculated-split-heading"><div><span className="eyebrow">Review</span><h3>Calculated split</h3></div><strong>৳{formatMoney(reviewedDraft.total_bill)}</strong></div><div className="calculated-split-list">{reviewedDraft.people_snapshot.map((person, index) => <article key={person.position}><span className="person-number" aria-hidden="true">{index + 1}</span><div><strong>{person.display_name}</strong><small>{person.ac_units.toFixed(2)} AC units</small></div><span className="calculated-amount">৳{formatMoney(person.total_amount)}</span></article>)}</div><div className="calculated-actions"><button className="primary-button action-publish action-large" type="button" aria-label="Publish calculated bill" onClick={publishCalculated} disabled={busy}>{busy ? "Publishing…" : "Publish bill"}</button></div></section>}
           <div className="form-footer"><span>{editingStatus === "published" ? "Reopen this bill to make changes." : reviewedDraft ? "Review the split, then save it as a private draft." : "Calculate the split before saving this private draft."}</span>{editingStatus === "published" ? <button className="primary-button action-save action-medium" disabled>Save draft</button> : reviewedDraft ? <button className="primary-button action-save action-medium" disabled={busy}>Save draft</button> : <button className="primary-button action-calculate action-large" type="button" onClick={calculate} disabled={busy || !requiredTariff || !people.length}>Calculate split</button>}</div>
         </form>
         <section className="content-card records-card"><span className="eyebrow">History</span><h2>Drafts and published bills</h2><p className="card-intro">Select a record to review or change its publishing status.</p><div className="history-list admin-history">{bills.length ? bills.map((item) => {
@@ -433,13 +425,12 @@ export default function Admin({ configured, database, tariffs, onTariffCreated, 
       <section className="content-card members-card">
         <span className="eyebrow">Roster</span>
         <h2>Members</h2>
-        <p className="card-intro">Manage private names and the aliases shown in public monthly bills.</p>
+        <p className="card-intro">Manage the names shown in monthly bills.</p>
         {members.length ? <div className="member-list">{members.map((member) => {
           const displayName = memberNames[member.id] ?? member.display_name;
-          const publicAlias = memberAliases[member.id] ?? member.public_alias ?? "";
-          return <article key={member.id}><input aria-label={`Member name for ${member.display_name}`} value={displayName} onChange={(event) => setMemberNames((current) => ({ ...current, [member.id]: event.target.value }))} /><input aria-label={`Member public alias for ${member.display_name}`} value={publicAlias} onChange={(event) => setMemberAliases((current) => ({ ...current, [member.id]: event.target.value }))} /><span className={`member-status ${member.is_active ? "active" : "removed"}`}>{member.is_active ? "Active" : "Removed"}</span><button className="secondary-button compact-button action-save" type="button" disabled={busy || !displayName.trim() || !publicAlias.trim()} aria-label={`Save ${member.display_name}`} onClick={() => updateMember(member, { display_name: displayName.trim(), public_alias: publicAlias.trim() })}>Save</button><button className={`secondary-button compact-button ${member.is_active ? "action-remove" : "action-restore"}`} type="button" disabled={busy} aria-label={`${member.is_active ? "Remove" : "Restore"} ${member.display_name}`} onClick={() => updateMember(member, { is_active: !member.is_active })}>{member.is_active ? "Remove" : "Restore"}</button></article>;
+          return <article key={member.id}><input aria-label={`Member name for ${member.display_name}`} value={displayName} onChange={(event) => setMemberNames((current) => ({ ...current, [member.id]: event.target.value }))} /><span className={`member-status ${member.is_active ? "active" : "removed"}`}>{member.is_active ? "Active" : "Removed"}</span><button className="secondary-button compact-button action-save" type="button" disabled={busy || !displayName.trim()} aria-label={`Save ${member.display_name}`} onClick={() => updateMember(member, { display_name: displayName.trim() })}>Save</button><button className={`secondary-button compact-button ${member.is_active ? "action-remove" : "action-restore"}`} type="button" disabled={busy} aria-label={`${member.is_active ? "Remove" : "Restore"} ${member.display_name}`} onClick={() => updateMember(member, { is_active: !member.is_active })}>{member.is_active ? "Remove" : "Restore"}</button></article>;
         })}</div> : <p className="empty-list">No members yet.</p>}
-        <form className="member-add-form" onSubmit={addMember}><label>New member name<input aria-label="New member name" value={newMemberName} onChange={(event) => setNewMemberName(event.target.value)} required /></label><label>Public alias<input aria-label="New member public alias" value={newMemberAlias} onChange={(event) => setNewMemberAlias(event.target.value)} required /></label><button className="primary-button action-add action-medium" disabled={busy || !newMemberName.trim() || !newMemberAlias.trim()}>Add member</button></form>
+        <form className="member-add-form" onSubmit={addMember}><label>New member name<input aria-label="New member name" value={newMemberName} onChange={(event) => setNewMemberName(event.target.value)} required /></label><button className="primary-button action-add action-medium" disabled={busy || !newMemberName.trim()}>Add member</button></form>
       </section>
       <form className="content-card tariff-form" onSubmit={createTariff}>
         <div className="panel-heading"><div><span className="eyebrow">Pricing controls</span><h2>Create tariff version</h2><p className="card-intro">Set each unit range and its price. The final slab covers all remaining units.</p></div></div>

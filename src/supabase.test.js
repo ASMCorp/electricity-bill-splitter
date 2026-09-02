@@ -38,11 +38,11 @@ describe("member database operations", () => {
     const { database } = await import("./supabase.js");
 
     await expect(database.members()).resolves.toEqual([]);
-    await database.createMember({ display_name: "Anik", public_alias: "A." });
+    await database.createMember({ display_name: "Anik" });
     await database.updateMember("m1", { is_active: false });
 
     expect(client.from).toHaveBeenCalledWith("members");
-    expect(query.insert).toHaveBeenCalledWith({ display_name: "Anik", public_alias: "A." });
+    expect(query.insert).toHaveBeenCalledWith({ display_name: "Anik", public_alias: "Anik" });
     expect(query.update).toHaveBeenCalledWith({ is_active: false });
     expect(query.eq).toHaveBeenCalledWith("id", "m1");
   });

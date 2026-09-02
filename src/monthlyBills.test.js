@@ -9,8 +9,8 @@ const tariff = {
 };
 
 const people = [
-  { id: "p1", name: "Anik", alias: "A.", ac: "4", color: "#000" },
-  { id: "p2", name: "Debasis", alias: "D.", ac: "0", color: "#111" },
+  { id: "p1", name: "Anik", ac: "4", color: "#000" },
+  { id: "p2", name: "Debasis", ac: "0", color: "#111" },
 ];
 
 describe("monthly bill records", () => {
@@ -19,7 +19,7 @@ describe("monthly bill records", () => {
 
     expect(payload.tariff_version_id).toBe("tariff-1");
     expect(payload.tariff_snapshot).toEqual(tariff.slabs);
-    expect(payload.people_snapshot[0]).toMatchObject({ member_id: "p1", display_name: "Anik", public_alias: "A." });
+    expect(payload.people_snapshot[0]).toMatchObject({ member_id: "p1", display_name: "Anik", public_alias: "Anik" });
     expect(payload.people_snapshot.reduce((sum, row) => sum + row.total_amount, 0)).toBeCloseTo(30, 10);
     expect(payload.status).toBe("draft");
   });
@@ -27,18 +27,19 @@ describe("monthly bill records", () => {
   it("copies only identities from the previous month", () => {
     const prior = { people_snapshot: [{ display_name: "Anik", public_alias: "A.", ac_units: 44 }] };
     expect(peopleFromPreviousMonth(prior)).toEqual([
-      { id: 1, name: "Anik", alias: "A.", ac: "" },
+      { id: 1, name: "Anik", ac: "" },
     ]);
   });
 
-  it("requires a public-safe alias instead of exposing the display name", () => {
-    expect(() => buildMonthlyBillPayload({
+  it("uses a member name for the compatibility snapshot field", () => {
+    const payload = buildMonthlyBillPayload({
       year: 2026,
       month: 2,
       bill: "30",
-      people: [{ ...people[0], alias: "   " }],
+      people: [people[0]],
       tariff,
-    })).toThrow("Enter a public alias for every person.");
+    });
+    expect(payload.people_snapshot[0].public_alias).toBe("Anik");
   });
 
   it("rejects bill amounts with more than two decimal places", () => {

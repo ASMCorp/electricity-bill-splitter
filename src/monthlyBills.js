@@ -9,9 +9,7 @@ export function buildMonthlyBillPayload({ year, month, bill, people, tariff }) {
   const result = splitBill(normalizedBill, people, tariff.slabs);
   if (result.bill <= 0) throw new Error("Bill amount must be greater than zero.");
   if (!people.length) throw new Error("At least one person is required.");
-  if (people.some((person) => !person.alias?.trim())) {
-    throw new Error("Enter a public alias for every person.");
-  }
+
 
   return {
     bill_year: Number(year),
@@ -31,7 +29,9 @@ export function buildMonthlyBillPayload({ year, month, bill, people, tariff }) {
       position: index,
       member_id: row.id,
       display_name: row.name,
-      public_alias: people[index].alias.trim(),
+      // Kept for compatibility with existing snapshot validation. Public
+      // records now expose display_name directly instead of this field.
+      public_alias: row.name,
       color: row.color || people[index].color || null,
       ac_units: row.u,
       ac_amount: row.ac,
@@ -45,7 +45,6 @@ export function peopleFromPreviousMonth(previousBill) {
   return (previousBill?.people_snapshot || []).map((person, index) => ({
     id: index + 1,
     name: person.display_name,
-    alias: person.public_alias || "",
     ac: "",
   }));
 }

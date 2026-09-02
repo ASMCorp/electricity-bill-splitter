@@ -32,11 +32,10 @@ it("shows the tariff effective today instead of a future version", () => {
   expect(screen.getByRole("heading", { name: "Pricing version history" }).parentElement).toHaveTextContent("Future");
 });
 
-it("shows only published record aliases and opens month details", async () => {
+it("shows published record names and opens month details", async () => {
   const bills = [{ id: "b1", bill_year: 2026, bill_month: 1, total_bill: 100, people_snapshot: [{ position: 0, display_name: "Private Full Name", public_alias: "P.", ac_units: 2, total_amount: 100 }] }];
   render(<MonthlyBills configured loading={false} error="" bills={bills} />);
-  expect(screen.getByText("P.")).toBeInTheDocument();
-  expect(screen.queryByText("Private Full Name")).not.toBeInTheDocument();
+  expect(screen.getByText("Private Full Name")).toBeInTheDocument();
   expect(screen.getByRole("region", { name: "Monthly bill details" })).toHaveTextContent("January 2026");
 });
 
@@ -160,10 +159,9 @@ describe("admin authorization", () => {
 
     render(<Admin configured database={database} tariffs={[BUNDLED_TARIFF]} onTariffCreated={vi.fn()} />);
     await user.type(await screen.findByLabelText("New member name"), "Anik");
-    await user.type(screen.getByLabelText("New member public alias"), "A.");
     await user.click(screen.getByRole("button", { name: "Add member" }));
 
-    expect(database.createMember).toHaveBeenCalledWith({ display_name: "Anik", public_alias: "A." });
+    expect(database.createMember).toHaveBeenCalledWith({ display_name: "Anik" });
     expect(screen.getByLabelText("AC units for Anik")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Calculate split" })).toBeEnabled();
   });
@@ -209,7 +207,7 @@ describe("admin authorization", () => {
     await user.type(name, "Anik S.");
     await user.click(screen.getByRole("button", { name: "Save Anik" }));
 
-    expect(database.updateMember).toHaveBeenCalledWith("member-1", { display_name: "Anik S.", public_alias: "A." });
+    expect(database.updateMember).toHaveBeenCalledWith("member-1", { display_name: "Anik S." });
     expect(screen.getByLabelText("AC units for Anik S.")).toBeInTheDocument();
   });
 
@@ -233,7 +231,7 @@ describe("admin authorization", () => {
     await user.type(screen.getByLabelText("AC units for Anik"), "1");
     await user.click(screen.getByRole("button", { name: "Calculate split" }));
 
-    expect(screen.getByRole("region", { name: "Calculated split" })).toHaveTextContent("A.");
+    expect(screen.getByRole("region", { name: "Calculated split" })).toHaveTextContent("Anik");
     expect(screen.getByRole("button", { name: "Save draft" })).toBeEnabled();
 
     await user.click(screen.getByRole("button", { name: "Save draft" }));
@@ -259,7 +257,6 @@ describe("admin authorization", () => {
     expect(screen.getByRole("region", { name: "Calculated split" })).toBeInTheDocument();
 
     await user.type(screen.getByLabelText("New member name"), "Debasis");
-    await user.type(screen.getByLabelText("New member public alias"), "D.");
     await user.click(screen.getByRole("button", { name: "Add member" }));
 
     expect(screen.queryByRole("region", { name: "Calculated split" })).not.toBeInTheDocument();
@@ -434,7 +431,7 @@ describe("admin authorization", () => {
     expect(screen.getByRole("combobox", { name: "Month" })).toContainElement(screen.getByRole("option", { name: "January" }));
     expect(screen.getAllByRole("option")).toHaveLength(13);
     expect(screen.getAllByLabelText("Name")).toHaveLength(1);
-    expect(screen.getByLabelText("Public alias for Anik")).toBeDisabled();
+    expect(screen.queryByLabelText("Public alias for Anik")).not.toBeInTheDocument();
   });
 
   it("rejects an authenticated non-admin instead of showing write controls", async () => {

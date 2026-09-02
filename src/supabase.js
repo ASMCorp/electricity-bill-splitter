@@ -48,6 +48,21 @@ export const database = {
     if (error) throw error;
     return data;
   },
+  async members() {
+    const { data, error } = await requireClient().from("members").select("id,display_name,public_alias,is_active,created_at,updated_at").order("created_at", { ascending: true });
+    if (error) throw error;
+    return data;
+  },
+  async createMember(payload) {
+    const { data, error } = await requireClient().from("members").insert(payload).select().single();
+    if (error) throw error;
+    return data;
+  },
+  async updateMember(id, changes) {
+    const { data, error } = await requireClient().from("members").update(changes).eq("id", id).select().single();
+    if (error) throw error;
+    return data;
+  },
   async saveDraft(payload, id) {
     const query = id
       ? requireClient().from("monthly_bills").update(payload).eq("id", id)
@@ -63,6 +78,11 @@ export const database = {
   },
   async createTariff(payload) {
     const { data, error } = await requireClient().from("tariff_versions").insert(payload).select().single();
+    if (error) throw error;
+    return data;
+  },
+  async deleteTariff(id) {
+    const { data, error } = await requireClient().from("tariff_versions").delete().eq("id", id).select("id").single();
     if (error) throw error;
     return data;
   },

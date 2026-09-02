@@ -28,6 +28,7 @@ export default function App({ configured = isSupabaseConfigured, databaseClient 
 
   const activeTariff = useMemo(() => currentTariff(tariffs), [tariffs]);
   const addTariff = async (created) => setTariffs((current) => [created, ...current].sort((a, b) => b.effective_from.localeCompare(a.effective_from)));
+  const replaceTariffs = async (versions) => setTariffs(versions.length ? versions : [BUNDLED_TARIFF]);
   const refreshPublishedBills = async () => {
     const published = await databaseClient.publishedBills();
     setBills(published);
@@ -46,7 +47,7 @@ export default function App({ configured = isSupabaseConfigured, databaseClient 
       {view === "Calculator" && <BillForm slabs={activeTariff.slabs} tariffLabel={calculatorLabel} tariffLoading={configured && loading} />}
       {view === "Transparency" && <Transparency tariffs={tariffs} usingBundledReason={usingBundledReason} />}
       {view === "Monthly Bills" && <MonthlyBills bills={bills} configured={configured} loading={loading} error={databaseError} />}
-      {view === "Admin" && <Admin configured={configured} database={databaseClient} tariffs={tariffs} onTariffCreated={addTariff} onBillsChanged={refreshPublishedBills} />}
+      {view === "Admin" && <Admin configured={configured} database={databaseClient} tariffs={tariffs} onTariffCreated={addTariff} onTariffsChanged={replaceTariffs} onBillsChanged={refreshPublishedBills} />}
     </div>
   );
 }

@@ -29,6 +29,7 @@ export function buildMonthlyBillPayload({ year, month, bill, people, tariff }) {
     },
     people_snapshot: result.rows.map((row, index) => ({
       position: index,
+      member_id: row.id,
       display_name: row.name,
       public_alias: people[index].alias.trim(),
       color: row.color || people[index].color || null,

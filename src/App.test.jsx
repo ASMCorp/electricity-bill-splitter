@@ -14,7 +14,7 @@ const deferred = () => {
 describe("application views", () => {
   it("navigates public views and explains unconfigured database features", async () => {
     const user = userEvent.setup();
-    render(<App />);
+    render(<App configured={false} />);
 
     expect(screen.getByRole("heading", { name: "Split the bill" })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /save pdf/i })).not.toBeInTheDocument();

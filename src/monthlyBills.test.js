@@ -19,7 +19,7 @@ describe("monthly bill records", () => {
 
     expect(payload.tariff_version_id).toBe("tariff-1");
     expect(payload.tariff_snapshot).toEqual(tariff.slabs);
-    expect(payload.people_snapshot[0]).toMatchObject({ display_name: "Anik", public_alias: "A." });
+    expect(payload.people_snapshot[0]).toMatchObject({ member_id: "p1", display_name: "Anik", public_alias: "A." });
     expect(payload.people_snapshot.reduce((sum, row) => sum + row.total_amount, 0)).toBeCloseTo(30, 10);
     expect(payload.status).toBe("draft");
   });
@@ -31,7 +31,7 @@ describe("monthly bill records", () => {
     ]);
   });
 
-  it("requires an explicit public alias instead of exposing the display name", () => {
+  it("requires a public-safe alias instead of exposing the display name", () => {
     expect(() => buildMonthlyBillPayload({
       year: 2026,
       month: 2,
@@ -39,12 +39,6 @@ describe("monthly bill records", () => {
       people: [{ ...people[0], alias: "   " }],
       tariff,
     })).toThrow("Enter a public alias for every person.");
-  });
-
-  it("does not derive a missing previous-month alias from the display name", () => {
-    const prior = { people_snapshot: [{ display_name: "Private Name", public_alias: "" }] };
-
-    expect(peopleFromPreviousMonth(prior)[0].alias).toBe("");
   });
 
   it("rejects bill amounts with more than two decimal places", () => {

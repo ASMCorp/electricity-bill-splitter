@@ -6,12 +6,14 @@ A React/Vite app for splitting an electricity bill across residents. The public 
 
 - Public bill calculator with an image download
 - Public tariff methodology and version history
-- Public, read-only monthly records that expose aliases—not stored private names
+- Public, read-only monthly records that expose saved member names through a restricted view
 - Versioned, immutable tariffs with effective dates
+- Persistent administrator-managed member roster with soft removal and restore
 - One draft or published record per calendar month
 - Tariff, calculation, and per-person snapshots on every monthly bill
 - Admin email/password login plus server-side `is_admin` authorization
-- Explicit draft → publish → reopen workflow and previous-month people shortcut
+- Calculate → review → draft/publish workflow using the active roster
+- Downloadable bill images for published records
 - Row-level security and append-only audit logging
 - Graceful calculator-only mode when Supabase is not configured
 
@@ -40,7 +42,7 @@ npm run build
 ## Supabase setup
 
 1. Create a Supabase project.
-2. Apply `supabase/migrations/202609020001_monthly_billing.sql` with one of:
+2. Apply every migration in `supabase/migrations/` in filename order with one of:
 
    ```bash
    supabase link --project-ref YOUR_PROJECT_REF
@@ -97,7 +99,8 @@ Then promote the intended account with the bootstrap statement above.
 
 ## Data and security model
 
-- `tariff_versions` stores immutable slabs and effective dates. Updating/deleting a tariff raises an error; create a new version instead.
+- `members` stores the administrator-managed roster. Removal is a soft deactivation, so historical bill snapshots remain unchanged.
+- `tariff_versions` stores immutable slabs and effective dates. Versions cannot be updated. Only unused future versions can be deleted; current, past, and bill-linked versions remain protected.
 - New tariff versions cannot be backdated into or before a month that already has a saved bill, so existing snapshots remain publishable and reopenable.
 - Tariff creation and monthly-bill validation share a transaction-level database lock to serialize concurrent applicability checks.
 - `monthly_bills` has a unique `(bill_year, bill_month)` constraint. New rows must be drafts.
@@ -123,8 +126,8 @@ The migration must be applied separately to the Supabase project before database
 
 ## Operational workflow
 
-1. Create a new immutable tariff version when pricing changes; set its effective date.
-2. Create a monthly draft, select the applicable tariff, and optionally copy identities from the previous month. AC readings and bill amount are intentionally cleared by the shortcut.
-3. Review and save the draft. The database enforces one record per month.
-4. Publish to expose the alias-only snapshot publicly.
-5. To correct a published record, reopen it first, edit the draft, then publish again. Every transition is audited.
+1. Maintain the active member roster. Renaming, removing, or restoring a member affects new bills only.
+2. Create a new immutable tariff version when pricing changes; set its effective date.
+3. Enter a monthly bill and AC usage for the active roster, then calculate and review the split.
+4. Save a private draft or publish the reviewed calculation. The database enforces one record per month.
+5. To correct a published record, reopen it first, edit and recalculate the draft, then publish again. Every transition is audited.

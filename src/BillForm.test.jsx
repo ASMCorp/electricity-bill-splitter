@@ -80,4 +80,23 @@ describe("BillForm", () => {
     names.forEach((name) => expect(screen.getByLabelText(`AC units for ${name}`)).toHaveValue(""));
     expect(screen.queryByRole("region", { name: "Bill result" })).not.toBeInTheDocument();
   });
+
+  it("disables calculation while configured tariff pricing is loading", () => {
+    render(<BillForm tariffLoading />);
+
+    expect(screen.getByRole("button", { name: "Loading pricing…" })).toBeDisabled();
+  });
+
+  it("keeps the tariff label used by an existing result", async () => {
+    const user = userEvent.setup();
+    const { rerender } = render(<BillForm tariffLabel="Pricing v1" />);
+    await enterMonthlyReadings(user);
+    await user.click(screen.getByRole("button", { name: "Calculate bill" }));
+
+    rerender(<BillForm tariffLabel="Pricing v2" />);
+
+    const result = screen.getByRole("region", { name: "Bill result" });
+    expect(within(result).getByText("Pricing v1")).toBeInTheDocument();
+    expect(within(result).queryByText("Pricing v2")).not.toBeInTheDocument();
+  });
 });

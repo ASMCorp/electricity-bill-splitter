@@ -6,6 +6,7 @@ const migrationPath = join(process.cwd(), "supabase/migrations/202609020001_mont
 const migration = readFileSync(migrationPath, "utf8");
 const membersMigrationPath = join(process.cwd(), "supabase/migrations/202609020002_members.sql");
 const tariffLifecycleMigrationPath = join(process.cwd(), "supabase/migrations/202609020003_tariff_lifecycle.sql");
+const memberAliasRepairMigrationPath = join(process.cwd(), "supabase/migrations/202609020004_member_public_alias_repair.sql");
 
 function functionBody(name) {
   const match = migration.match(new RegExp(`create or replace function public\\.${name}\\(\\)[\\s\\S]*?as \\$\\$([\\s\\S]*?)\\$\\$;`, "i"));
@@ -61,5 +62,16 @@ describe("tariff version lifecycle migration", () => {
     expect(tariffMigration).toContain("from public.monthly_bills");
     expect(tariffMigration).toContain("tariff_version_id = old.id");
     expect(tariffMigration).toContain("tariff versions cannot be updated");
+  });
+});
+
+describe("member public-alias repair migration", () => {
+  it("adds a privacy-safe alias when an older members table is missing it", () => {
+    const repairMigration = readFileSync(memberAliasRepairMigrationPath, "utf8").toLowerCase();
+
+    expect(repairMigration).toContain("add column if not exists public_alias text");
+    expect(repairMigration).toContain("'member ' || right(id::text, 6)");
+    expect(repairMigration).toContain("alter column public_alias set not null");
+    expect(repairMigration).toContain("new.public_alias := btrim(new.public_alias)");
   });
 });

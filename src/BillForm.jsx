@@ -38,7 +38,7 @@ const initials = (name) =>
 
 function activeSlabs(result) {
   let lowerBound = 0;
-  return SLABS.map((slab, index) => {
+  return result.tariffSnapshot.map((slab, index) => {
     const used = result.perSlab[index];
     const lower = lowerBound;
     const upper = lower + used;
@@ -217,7 +217,7 @@ async function createReceipt(result) {
   return canvas.toDataURL("image/png");
 }
 
-export default function BillForm() {
+export default function BillForm({ slabs = SLABS, tariffLabel = "Bundled default pricing", tariffLoading = false }) {
   const [bill, setBill] = useState("");
   const [people, setPeople] = useState(INITIAL_PEOPLE);
   const [result, setResult] = useState(null);
@@ -276,7 +276,7 @@ export default function BillForm() {
       focusPanel("form");
       return;
     }
-    setResult(splitBill(bill, people));
+    setResult({ ...splitBill(bill, people, slabs), tariffLabel });
     setImage(null);
     setError("");
     focusPanel("result");
@@ -345,6 +345,8 @@ export default function BillForm() {
             {result && <span className="edit-state">Editing</span>}
           </div>
 
+          <p className="pricing-label">{tariffLabel}</p>
+
           <label className="bill-field">
             <span>Total bill</span>
             <div className="bill-input">
@@ -412,7 +414,7 @@ export default function BillForm() {
           <div className="form-actions">
             <button className="text-button" type="button" onClick={addPerson}>+ Add person</button>
             <button className="secondary-button" type="button" onClick={reset}>Reset</button>
-            <button className="primary-button" type="button" onClick={calculate}>Calculate bill</button>
+            <button className="primary-button" type="button" onClick={calculate} disabled={tariffLoading}>{tariffLoading ? "Loading pricing…" : "Calculate bill"}</button>
           </div>
         </section>
 
@@ -509,6 +511,7 @@ export default function BillForm() {
             </div>
 
             <TariffBreakdown result={result} />
+            <p className="pricing-label">{result.tariffLabel}</p>
 
             <div className="result-footer">
               <span className="balanced-mark">✓ Balanced to ৳{formatMoney(result.bill)}</span>
@@ -516,9 +519,7 @@ export default function BillForm() {
                 <button className="secondary-button" type="button" onClick={saveImage} disabled={busy}>
                   {busy ? "Drawing…" : "Save image"}
                 </button>
-                <button className="secondary-button" type="button" onClick={() => window.print()}>
-                  Save PDF
-                </button>
+
               </div>
             </div>
           </section>
@@ -529,7 +530,7 @@ export default function BillForm() {
         <div className="sheet" role="dialog" aria-modal="true" aria-label="Bill image">
           <div className="sheet-inner">
             {image === "error" ? (
-              <p className="form-error">Could not draw the image. Save as PDF instead.</p>
+              <p className="form-error">Could not draw the image. Please try again.</p>
             ) : (
               <>
                 <img src={image} alt="Electricity bill summary" />
@@ -858,10 +859,4 @@ const CSS = `
   .result-footer { align-items: flex-start; flex-direction: column; }
 }
 
-@media print {
-  .app { padding: 0; background: #fff; }
-  .page-heading, .input-panel, .result-heading button, .result-footer, .sheet { display: none !important; }
-  .workspace, .workspace.has-result.result-focus, .workspace.has-result.form-focus { width: 100%; display: block; }
-  .result-panel { border: 0; box-shadow: none; }
-}
 `;

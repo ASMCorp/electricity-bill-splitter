@@ -7,6 +7,7 @@ const migration = readFileSync(migrationPath, "utf8");
 const membersMigrationPath = join(process.cwd(), "supabase/migrations/202609020002_members.sql");
 const tariffLifecycleMigrationPath = join(process.cwd(), "supabase/migrations/202609020003_tariff_lifecycle.sql");
 const memberAliasRepairMigrationPath = join(process.cwd(), "supabase/migrations/202609020004_member_public_alias_repair.sql");
+const memberNameOnlyResetMigrationPath = join(process.cwd(), "supabase/migrations/202609020006_member_name_only_reset.sql");
 
 function functionBody(name) {
   const match = migration.match(new RegExp(`create or replace function public\\.${name}\\(\\)[\\s\\S]*?as \\$\\$([\\s\\S]*?)\\$\\$;`, "i"));
@@ -32,7 +33,7 @@ describe("member roster migration", () => {
     const membersMigration = readFileSync(membersMigrationPath, "utf8").toLowerCase();
 
     expect(membersMigration).toContain("create table public.members");
-    expect(membersMigration).toContain("public_alias text not null");
+    expect(membersMigration).toContain("display_name text not null");
     expect(membersMigration).toContain("is_active boolean not null default true");
     expect(membersMigration).toContain("members_admin_insert");
     expect(membersMigration).toContain("members_admin_update");
@@ -49,6 +50,18 @@ describe("member roster migration", () => {
     expect(membersMigration).toContain("m.display_name = person ->> 'display_name'");
     expect(membersMigration).toContain("m.public_alias = person ->> 'public_alias'");
     expect(membersMigration).toContain("create trigger monthly_bills_00_validate_roster");
+  });
+});
+
+describe("member name-only reset migration", () => {
+  it("clears saved bills and rebuilds the member table without aliases", () => {
+    const resetMigration = readFileSync(memberNameOnlyResetMigrationPath, "utf8").toLowerCase();
+
+    expect(resetMigration).toContain("delete from public.monthly_bills");
+    expect(resetMigration).toContain("drop table if exists public.members");
+    expect(resetMigration).toContain("create table public.members");
+    expect(resetMigration).toContain("display_name text not null");
+    expect(resetMigration).not.toContain("public_alias");
   });
 });
 

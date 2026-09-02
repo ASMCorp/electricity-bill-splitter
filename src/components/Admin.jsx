@@ -174,7 +174,7 @@ export default function Admin({ configured, database, tariffs, onTariffCreated, 
     try {
       const receiptPeople = (item.people_snapshot || []).map((person, index) => ({
         id: person.position ?? index,
-        name: person.public_alias || person.display_name,
+        name: person.display_name,
         ac: person.ac_units,
         color: person.color || RECEIPT_COLORS[index % RECEIPT_COLORS.length],
       }));
@@ -185,7 +185,7 @@ export default function Admin({ configured, database, tariffs, onTariffCreated, 
         sharedPerPerson: Number(item.calculation_snapshot?.shared_per_person ?? calculated.sharedPerPerson),
         rows: (item.people_snapshot || []).map((person, index) => ({
           id: person.position ?? index,
-          name: person.public_alias || person.display_name,
+          name: person.display_name,
           color: person.color || RECEIPT_COLORS[index % RECEIPT_COLORS.length],
           u: Number(person.ac_units),
           ac: Number(person.ac_amount),

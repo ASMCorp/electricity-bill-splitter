@@ -29,9 +29,6 @@ export function buildMonthlyBillPayload({ year, month, bill, people, tariff }) {
       position: index,
       member_id: row.id,
       display_name: row.name,
-      // Kept for compatibility with existing snapshot validation. Public
-      // records now expose display_name directly instead of this field.
-      public_alias: row.name,
       color: row.color || people[index].color || null,
       ac_units: row.u,
       ac_amount: row.ac,

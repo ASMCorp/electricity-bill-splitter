@@ -54,13 +54,12 @@ export const database = {
     return data;
   },
   async createMember(payload) {
-    const { data, error } = await requireClient().from("members").insert({ ...payload, public_alias: payload.display_name }).select().single();
+    const { data, error } = await requireClient().from("members").insert(payload).select().single();
     if (error) throw error;
     return data;
   },
   async updateMember(id, changes) {
-    const payload = "display_name" in changes ? { ...changes, public_alias: changes.display_name } : changes;
-    const { data, error } = await requireClient().from("members").update(payload).eq("id", id).select().single();
+    const { data, error } = await requireClient().from("members").update(changes).eq("id", id).select().single();
     if (error) throw error;
     return data;
   },

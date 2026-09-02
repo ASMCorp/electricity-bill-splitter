@@ -23,8 +23,8 @@ export default function MonthlyBills({ bills, configured, loading, error }) {
           <p className="large-total">৳{formatMoney(detail.total_bill)}</p>
           <div className="published-people">
             {detail.people_snapshot.map((person) => (
-              <article key={`${person.position}-${person.display_name || person.public_alias}`}>
-                <strong>{person.display_name || person.public_alias}</strong>
+              <article key={`${person.position}-${person.display_name}`}>
+                <strong>{person.display_name}</strong>
                 <span>{person.ac_units.toFixed(2)} AC units</span>
                 <b>৳{formatMoney(person.total_amount)}</b>
               </article>

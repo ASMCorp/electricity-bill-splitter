@@ -99,7 +99,7 @@ Then promote the intended account with the bootstrap statement above.
 
 ## Data and security model
 
-- `members` stores the administrator-managed roster. Removal is a soft deactivation, so historical bill snapshots remain unchanged.
+- `members` stores the administrator-managed roster with one editable identity field: `display_name`. Removal is a soft deactivation, so historical bill snapshots remain unchanged.
 - `tariff_versions` stores immutable slabs and effective dates. Versions cannot be updated. Only unused future versions can be deleted; current, past, and bill-linked versions remain protected.
 - New tariff versions cannot be backdated into or before a month that already has a saved bill, so existing snapshots remain publishable and reopenable.
 - Tariff creation and monthly-bill validation share a transaction-level database lock to serialize concurrent applicability checks.
@@ -123,6 +123,8 @@ For Vercel:
 5. Add the deployed origin under Supabase **Authentication → URL Configuration** if Auth redirect settings require it.
 
 The migration must be applied separately to the Supabase project before database-backed views or admin operations will work.
+
+Migration `202609020006_member_name_only_reset.sql` is a deliberate data reset. It removes saved monthly bills and their member/bill audit entries, rebuilds the member table with names only, and preserves tariff versions. Apply it after the earlier migrations.
 
 ## Operational workflow
 

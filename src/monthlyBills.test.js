@@ -19,7 +19,8 @@ describe("monthly bill records", () => {
 
     expect(payload.tariff_version_id).toBe("tariff-1");
     expect(payload.tariff_snapshot).toEqual(tariff.slabs);
-    expect(payload.people_snapshot[0]).toMatchObject({ member_id: "p1", display_name: "Anik", public_alias: "Anik" });
+    expect(payload.people_snapshot[0]).toMatchObject({ member_id: "p1", display_name: "Anik" });
+    expect(payload.people_snapshot[0]).not.toHaveProperty("public_alias");
     expect(payload.people_snapshot.reduce((sum, row) => sum + row.total_amount, 0)).toBeCloseTo(30, 10);
     expect(payload.status).toBe("draft");
   });
@@ -31,7 +32,7 @@ describe("monthly bill records", () => {
     ]);
   });
 
-  it("uses a member name for the compatibility snapshot field", () => {
+  it("stores the member name as the public snapshot identity", () => {
     const payload = buildMonthlyBillPayload({
       year: 2026,
       month: 2,
@@ -39,7 +40,8 @@ describe("monthly bill records", () => {
       people: [people[0]],
       tariff,
     });
-    expect(payload.people_snapshot[0].public_alias).toBe("Anik");
+    expect(payload.people_snapshot[0].display_name).toBe("Anik");
+    expect(payload.people_snapshot[0]).not.toHaveProperty("public_alias");
   });
 
   it("rejects bill amounts with more than two decimal places", () => {

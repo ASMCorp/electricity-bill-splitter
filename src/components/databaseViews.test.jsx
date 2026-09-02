@@ -33,7 +33,7 @@ it("shows the tariff effective today instead of a future version", () => {
 });
 
 it("shows published record names and opens month details", async () => {
-  const bills = [{ id: "b1", bill_year: 2026, bill_month: 1, total_bill: 100, people_snapshot: [{ position: 0, display_name: "Private Full Name", public_alias: "P.", ac_units: 2, total_amount: 100 }] }];
+  const bills = [{ id: "b1", bill_year: 2026, bill_month: 1, total_bill: 100, people_snapshot: [{ position: 0, display_name: "Private Full Name", ac_units: 2, total_amount: 100 }] }];
   render(<MonthlyBills configured loading={false} error="" bills={bills} />);
   expect(screen.getByText("Private Full Name")).toBeInTheDocument();
   expect(screen.getByRole("region", { name: "Monthly bill details" })).toHaveTextContent("January 2026");
@@ -148,7 +148,7 @@ describe("admin authorization", () => {
 
   it("adds a roster member to every new monthly bill", async () => {
     const user = userEvent.setup();
-    const created = { id: "member-1", display_name: "Anik", public_alias: "A.", is_active: true };
+    const created = { id: "member-1", display_name: "Anik", is_active: true };
     const database = {
       session: vi.fn().mockResolvedValue({ user: { id: "admin-1" } }),
       isAdmin: vi.fn().mockResolvedValue(true),
@@ -168,7 +168,7 @@ describe("admin authorization", () => {
 
   it("soft removes and restores a roster member", async () => {
     const user = userEvent.setup();
-    const active = { id: "member-1", display_name: "Anik", public_alias: "A.", is_active: true };
+    const active = { id: "member-1", display_name: "Anik", is_active: true };
     const database = {
       session: vi.fn().mockResolvedValue({ user: { id: "admin-1" } }),
       isAdmin: vi.fn().mockResolvedValue(true),
@@ -192,7 +192,7 @@ describe("admin authorization", () => {
 
   it("renames an active member in the roster and new bill", async () => {
     const user = userEvent.setup();
-    const active = { id: "member-1", display_name: "Anik", public_alias: "A.", is_active: true };
+    const active = { id: "member-1", display_name: "Anik", is_active: true };
     const database = {
       session: vi.fn().mockResolvedValue({ user: { id: "admin-1" } }),
       isAdmin: vi.fn().mockResolvedValue(true),
@@ -214,8 +214,8 @@ describe("admin authorization", () => {
   it("calculates the roster split before saving a draft", async () => {
     const user = userEvent.setup();
     const members = [
-      { id: "member-1", display_name: "Anik", public_alias: "A.", is_active: true },
-      { id: "member-2", display_name: "Debasis", public_alias: "D.", is_active: true },
+      { id: "member-1", display_name: "Anik", is_active: true },
+      { id: "member-2", display_name: "Debasis", is_active: true },
     ];
     const saved = { id: "bill-1", status: "draft", bill_year: 2026, bill_month: 1 };
     const database = {
@@ -241,8 +241,8 @@ describe("admin authorization", () => {
 
   it("invalidates a calculated split when the roster changes", async () => {
     const user = userEvent.setup();
-    const existing = { id: "member-1", display_name: "Anik", public_alias: "A.", is_active: true };
-    const created = { id: "member-2", display_name: "Debasis", public_alias: "D.", is_active: true };
+    const existing = { id: "member-1", display_name: "Anik", is_active: true };
+    const created = { id: "member-2", display_name: "Debasis", is_active: true };
     const database = {
       session: vi.fn().mockResolvedValue({ user: { id: "admin-1" } }),
       isAdmin: vi.fn().mockResolvedValue(true),
@@ -265,7 +265,7 @@ describe("admin authorization", () => {
 
   it("invalidates a calculated split when the applicable tariff changes", async () => {
     const user = userEvent.setup();
-    const member = { id: "member-1", display_name: "Anik", public_alias: "A.", is_active: true };
+    const member = { id: "member-1", display_name: "Anik", is_active: true };
     const database = {
       session: vi.fn().mockResolvedValue({ user: { id: "admin-1" } }),
       isAdmin: vi.fn().mockResolvedValue(true),
@@ -285,8 +285,8 @@ describe("admin authorization", () => {
 
   it("blocks direct publication of a draft whose roster is stale", async () => {
     const members = [
-      { id: "member-1", display_name: "Anik", public_alias: "A.", is_active: true },
-      { id: "member-2", display_name: "Debasis", public_alias: "D.", is_active: true },
+      { id: "member-1", display_name: "Anik", is_active: true },
+      { id: "member-2", display_name: "Debasis", is_active: true },
     ];
     const database = {
       session: vi.fn().mockResolvedValue({ user: { id: "admin-1" } }),
@@ -297,7 +297,7 @@ describe("admin authorization", () => {
         bill_year: 2026,
         bill_month: 1,
         total_bill: 30,
-        people_snapshot: [{ member_id: "member-1", display_name: "Anik", public_alias: "A.", ac_units: 0 }],
+        people_snapshot: [{ member_id: "member-1", display_name: "Anik", ac_units: 0 }],
       }]),
       members: vi.fn().mockResolvedValue(members),
       setBillStatus: vi.fn(),
@@ -312,7 +312,7 @@ describe("admin authorization", () => {
 
   it("publishes a calculated split after saving its draft snapshot", async () => {
     const user = userEvent.setup();
-    const members = [{ id: "member-1", display_name: "Anik", public_alias: "A.", is_active: true }];
+    const members = [{ id: "member-1", display_name: "Anik", is_active: true }];
     const saved = { id: "bill-1", status: "draft", bill_year: 2026, bill_month: 1 };
     const published = { ...saved, status: "published" };
     const database = {
@@ -337,7 +337,7 @@ describe("admin authorization", () => {
 
   it("keeps a newly saved draft recoverable when publishing fails", async () => {
     const user = userEvent.setup();
-    const members = [{ id: "member-1", display_name: "Anik", public_alias: "A.", is_active: true }];
+    const members = [{ id: "member-1", display_name: "Anik", is_active: true }];
     const saved = { id: "bill-1", status: "draft", bill_year: 2026, bill_month: 9 };
     const database = {
       session: vi.fn().mockResolvedValue({ user: { id: "admin-1" } }),
@@ -367,7 +367,7 @@ describe("admin authorization", () => {
       status: "published",
       tariff_snapshot: BUNDLED_TARIFF.slabs,
       calculation_snapshot: { total_units: 4.85, shared_per_person: 0 },
-      people_snapshot: [{ position: 0, display_name: "Anik", public_alias: "A.", color: "#e45756", ac_units: 1, ac_amount: 6.18, shared_amount: 23.32, total_amount: 29.5 }],
+      people_snapshot: [{ position: 0, display_name: "Anik", color: "#e45756", ac_units: 1, ac_amount: 6.18, shared_amount: 23.32, total_amount: 29.5 }],
     };
     const context = {
       scale: vi.fn(), fillRect: vi.fn(), fillText: vi.fn(), beginPath: vi.fn(),
@@ -406,13 +406,13 @@ describe("admin authorization", () => {
       total_bill: 100,
       status: "published",
       tariff_version_id: BUNDLED_TARIFF.id,
-      people_snapshot: [{ display_name: "Anik", public_alias: "A.", ac_units: 0 }],
+      people_snapshot: [{ display_name: "Anik", ac_units: 0 }],
     };
     const database = {
       session: vi.fn().mockResolvedValue({ user: { id: "admin-1" } }),
       isAdmin: vi.fn().mockResolvedValue(true),
       drafts: vi.fn().mockResolvedValue([published]),
-      members: vi.fn().mockResolvedValue([{ id: "member-1", display_name: "Anik", public_alias: "A.", is_active: true }]),
+      members: vi.fn().mockResolvedValue([{ id: "member-1", display_name: "Anik", is_active: true }]),
       signOut: vi.fn().mockResolvedValue(undefined),
       saveDraft: vi.fn(),
       setBillStatus: vi.fn(),
@@ -475,7 +475,7 @@ describe("admin authorization", () => {
       session: vi.fn().mockResolvedValue({ user: { id: "admin-1" } }),
       isAdmin: vi.fn().mockResolvedValue(true),
       drafts: vi.fn().mockResolvedValue([]),
-      members: vi.fn().mockResolvedValue([{ id: "member-1", display_name: "Anik", public_alias: "A.", is_active: true }]),
+      members: vi.fn().mockResolvedValue([{ id: "member-1", display_name: "Anik", is_active: true }]),
     };
 
     render(<Admin configured database={database} tariffs={[BUNDLED_TARIFF]} onTariffCreated={vi.fn()} />);
@@ -496,13 +496,13 @@ describe("admin authorization", () => {
       total_bill: 100,
       status: "draft",
       tariff_version_id: BUNDLED_TARIFF.id,
-      people_snapshot: [{ member_id: "member-1", display_name: "Anik", public_alias: "A.", ac_units: 0 }],
+      people_snapshot: [{ member_id: "member-1", display_name: "Anik", ac_units: 0 }],
     };
     const database = {
       session: vi.fn().mockResolvedValue({ user: { id: "admin-1" } }),
       isAdmin: vi.fn().mockResolvedValue(true),
       drafts: vi.fn().mockResolvedValue([draft]),
-      members: vi.fn().mockResolvedValue([{ id: "member-1", display_name: "Anik", public_alias: "A.", is_active: true }]),
+      members: vi.fn().mockResolvedValue([{ id: "member-1", display_name: "Anik", is_active: true }]),
       setBillStatus: vi.fn().mockResolvedValue({ ...draft, status: "published" }),
     };
     const onBillsChanged = vi.fn().mockResolvedValue(undefined);

@@ -3,6 +3,8 @@
 html, body, #root { min-height: 100%; margin: 0; }
 body { min-width: 320px; background: #eef1f1; }
 button, input, select { font: inherit; }
+.method-field { display: grid; gap: 8px; margin-top: 18px; font-size: 13px; font-weight: 600; }
+.method-field select { width: 100%; min-height: 42px; padding: 9px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); color: var(--ink); }
 
 .site-shell {
   --ink: #14262c;

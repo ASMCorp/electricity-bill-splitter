@@ -29,14 +29,14 @@ export default function Transparency({ tariffs, usingBundled, usingBundledReason
           <h2>Formulas</h2>
           <ol>
             <li>Estimate units by consuming the bill amount from the lowest slab upward.</li>
-            <li>Price declared AC units from the highest active slab downward.</li>
+            <li>Choose AC allocation: original bottom-up uses the highest active slab downward; new top-down uses the lowest active slab upward.</li>
             <li>Split the remaining bill equally, then add each person&apos;s AC amount.</li>
             <li>If AC units exceed estimated units, scale AC readings proportionally.</li>
           </ol>
         </article>
         <article className="content-card">
           <h2>Worked explanation</h2>
-          <p>For a ৳{formatMoney(600)} bill, the first 75 units cost ৳{formatMoney(75 * 6.18)}. The remainder is converted at the next active rate. AC is then attributed from the most expensive active units so the final person totals reconcile to exactly ৳{formatMoney(600)}.</p>
+          <p>For a ৳{formatMoney(600)} bill, the first 75 units cost ৳{formatMoney(75 * 6.18)}. The remainder is converted at the next active rate. AC is then attributed from the most expensive active units (original) or the cheapest active units (top-down), so the final person totals reconcile to exactly ৳{formatMoney(600)}.</p>
         </article>
       </section>
       <section className="content-card">

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { formatMoney } from "../billMath.js";
+import { calculationMethodLabel, formatMoney } from "../billMath.js";
 
 const monthName = (month) => new Intl.DateTimeFormat("en", { month: "long" }).format(new Date(2026, month - 1));
 
@@ -20,6 +20,7 @@ export default function MonthlyBills({ bills, configured, loading, error }) {
         </section>
         <section className="content-card" aria-label="Monthly bill details">
           <h2>{monthName(detail.bill_month)} {detail.bill_year}</h2>
+          <p className="privacy-note">{calculationMethodLabel(detail.calculation_snapshot?.method)}</p>
           <p className="large-total">৳{formatMoney(detail.total_bill)}</p>
           <div className="published-people">
             {detail.people_snapshot.map((person) => (

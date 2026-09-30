@@ -1,4 +1,4 @@
-import { formatMoney } from "./billMath.js";
+import { calculationMethodLabel, formatMoney } from "./billMath.js";
 
 const SLAB_COLORS = ["#f6c85f", "#ed9b40", "#df6c4f", "#c94c67", "#8f4f9f", "#4e4b8b"];
 
@@ -79,6 +79,7 @@ export async function createReceipt(result) {
   text("ELECTRICITY SPLIT", padding, 54, 12, 700, "#64777d");
   text(`৳${formatMoney(result.bill)}`, padding, 104, 42, 700);
   text(`${formatUnits(result.totalUnits)} units`, width - padding, 101, 18, 600, "#64777d", "right");
+  text(calculationMethodLabel(result.calculationMethod), padding, 125, 12, 400, "#64777d");
   line(136);
 
   let y = 180;

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { formatMoney, numberFrom, SLABS, splitBill } from "./billMath.js";
+import { CALCULATION_METHODS, calculationMethodLabel, formatMoney, numberFrom, SLABS, splitBill } from "./billMath.js";
 import { activeSlabs, createReceipt, formatUnits, initials } from "./receiptImage.js";
 
 const PERSON_COLORS = [
@@ -107,6 +107,7 @@ function TariffBreakdown({ result }) {
 
 export default function BillForm({ slabs = SLABS, tariffLabel = "Bundled default pricing", tariffLoading = false }) {
   const [bill, setBill] = useState("");
+  const [method, setMethod] = useState("highest-first");
   const [people, setPeople] = useState(INITIAL_PEOPLE);
   const [result, setResult] = useState(null);
   const [activePanel, setActivePanel] = useState("form");
@@ -164,7 +165,7 @@ export default function BillForm({ slabs = SLABS, tariffLabel = "Bundled default
       focusPanel("form");
       return;
     }
-    setResult({ ...splitBill(bill, people, slabs), tariffLabel });
+    setResult({ ...splitBill(bill, people, slabs, method), tariffLabel });
     setImage(null);
     setError("");
     focusPanel("result");
@@ -234,6 +235,12 @@ export default function BillForm({ slabs = SLABS, tariffLabel = "Bundled default
           </div>
 
           <p className="pricing-label">{tariffLabel}</p>
+          <label className="method-field">Calculation method
+            <select value={method} onChange={(event) => { setMethod(event.target.value); setResult(null); setImage(null); setActivePanel("form"); }}>
+              {Object.entries(CALCULATION_METHODS).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+            </select>
+          </label>
+          <p className="pricing-label">{method === "lowest-first" ? "AC uses the cheapest active units first." : "AC uses the most expensive active units first."} The remaining bill is shared equally.</p>
 
           <label className="bill-field">
             <span>Total bill</span>
@@ -399,7 +406,7 @@ export default function BillForm({ slabs = SLABS, tariffLabel = "Bundled default
             </div>
 
             <TariffBreakdown result={result} />
-            <p className="pricing-label">{result.tariffLabel}</p>
+            <p className="pricing-label">{result.tariffLabel} · {calculationMethodLabel(result.calculationMethod)}</p>
 
             <div className="result-footer">
               <span className="balanced-mark">✓ Balanced to ৳{formatMoney(result.bill)}</span>
@@ -461,7 +468,9 @@ const CSS = `
 }
 
 .app * { box-sizing: border-box; }
-.app button, .app input { font: inherit; }
+.app button, .app input, .app select { font: inherit; }
+.method-field { display: grid; gap: 8px; margin-top: 18px; font-size: 13px; font-weight: 600; }
+.method-field select { width: 100%; min-height: 42px; padding: 9px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); color: var(--ink); }
 .app button { -webkit-tap-highlight-color: transparent; }
 .app :focus-visible { outline: 3px solid rgba(11, 122, 117, 0.28); outline-offset: 3px; }
 

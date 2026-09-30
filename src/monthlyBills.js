@@ -1,12 +1,12 @@
 import { splitBill } from "./billMath.js";
 
-export function buildMonthlyBillPayload({ year, month, bill, people, tariff }) {
+export function buildMonthlyBillPayload({ year, month, bill, people, tariff, method = "highest-first" }) {
   if (!tariff?.id || !Array.isArray(tariff.slabs)) throw new Error("A tariff version is required.");
   const normalizedBill = String(bill).replace(/,/g, "").trim();
   if (!/^\d+(?:\.\d{1,2})?$/.test(normalizedBill)) {
     throw new Error("Bill amount must use at most two decimal places.");
   }
-  const result = splitBill(normalizedBill, people, tariff.slabs);
+  const result = splitBill(normalizedBill, people, tariff.slabs, method);
   if (result.bill <= 0) throw new Error("Bill amount must be greater than zero.");
   if (!people.length) throw new Error("At least one person is required.");
 
@@ -19,6 +19,7 @@ export function buildMonthlyBillPayload({ year, month, bill, people, tariff }) {
     tariff_version_id: tariff.id,
     tariff_snapshot: result.tariffSnapshot,
     calculation_snapshot: {
+      method: result.calculationMethod,
       total_units: result.totalUnits,
       ac_units: result.acUnits,
       ac_cost: result.acCost,

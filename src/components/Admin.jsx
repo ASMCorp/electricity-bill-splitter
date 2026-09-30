@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { buildMonthlyBillPayload } from "../monthlyBills.js";
-import { formatMoney, numberFrom, splitBill } from "../billMath.js";
+import { CALCULATION_METHODS, calculationMethodLabel, formatMoney, numberFrom, splitBill } from "../billMath.js";
 import { earliestTariffDateForNewVersion, tariffForBillMonth } from "../tariffs.js";
 import { createReceipt } from "../receiptImage.js";
 
@@ -55,6 +55,7 @@ export default function Admin({ configured, database, tariffs, onTariffCreated, 
   const [year, setYear] = useState(now.getFullYear());
   const [month, setMonth] = useState(now.getMonth() + 1);
   const [bill, setBill] = useState("");
+  const [method, setMethod] = useState("highest-first");
   const [people, setPeople] = useState([]);
   const [calculatedDraft, setCalculatedDraft] = useState(null);
   const [image, setImage] = useState(null);
@@ -146,7 +147,7 @@ export default function Admin({ configured, database, tariffs, onTariffCreated, 
   const calculate = () => {
     setMessage("");
     try {
-      setCalculatedDraft(buildMonthlyBillPayload({ year, month, bill, people, tariff }));
+      setCalculatedDraft(buildMonthlyBillPayload({ year, month, bill, people, tariff, method }));
     } catch (error) { setMessage(error.message); }
   };
 
@@ -178,7 +179,7 @@ export default function Admin({ configured, database, tariffs, onTariffCreated, 
         ac: person.ac_units,
         color: person.color || RECEIPT_COLORS[index % RECEIPT_COLORS.length],
       }));
-      const calculated = splitBill(item.total_bill, receiptPeople, item.tariff_snapshot);
+      const calculated = splitBill(item.total_bill, receiptPeople, item.tariff_snapshot, item.calculation_snapshot?.method || "highest-first");
       const result = {
         ...calculated,
         totalUnits: Number(item.calculation_snapshot?.total_units ?? calculated.totalUnits),
@@ -242,6 +243,7 @@ export default function Admin({ configured, database, tariffs, onTariffCreated, 
     setYear(today.getFullYear());
     setMonth(today.getMonth() + 1);
     setBill("");
+    setMethod("highest-first");
     setPeople(peopleFromMembers(members));
     setCalculatedDraft(null);
 
@@ -254,6 +256,7 @@ export default function Admin({ configured, database, tariffs, onTariffCreated, 
     setYear(item.bill_year);
     setMonth(item.bill_month);
     setBill(String(item.total_bill));
+    setMethod(item.calculation_snapshot?.method || "highest-first");
     setCalculatedDraft(null);
 
     if (item.status === "published") {
@@ -408,6 +411,8 @@ export default function Admin({ configured, database, tariffs, onTariffCreated, 
             <label>Total bill (৳)<input aria-label="Admin total bill" inputMode="decimal" placeholder="0.00" value={bill} onChange={(e) => { setBill(e.target.value); setCalculatedDraft(null); }} required disabled={editingStatus === "published"} /></label>
             <label>Tariff version<select value={requiredTariff?.id || ""} disabled>{!requiredTariff && <option value="">No applicable tariff</option>}{tariffs.map((item) => <option key={item.id} value={item.id} disabled={item.id !== requiredTariff?.id}>v{item.version} · {item.effective_from}</option>)}</select></label>
           </div>
+          <label>Calculation method<select value={method} onChange={(event) => { setMethod(event.target.value); setCalculatedDraft(null); }} disabled={editingStatus === "published"}>{Object.entries(CALCULATION_METHODS).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
+          <p className="privacy-note">{calculationMethodLabel(method)}. Remaining bill is shared equally.</p>
           {!requiredTariff && <p className="warning" role="status">No tariff applies to this bill month. Create an earlier tariff version first.</p>}
           <div className="people-section">
             <div className="section-title"><div><span className="eyebrow">Residents</span><h3>People and AC usage</h3></div></div>

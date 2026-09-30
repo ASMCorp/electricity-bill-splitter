@@ -7,6 +7,12 @@ export const SLABS = [
   { units: Infinity, rate: 17.35 },
 ];
 
+export const CALCULATION_METHODS = {
+  "highest-first": "Bottom-up · highest slab first (original)",
+  "lowest-first": "Top-down · lowest slab first (new)",
+};
+export const calculationMethodLabel = (method = "highest-first") => CALCULATION_METHODS[method] || CALCULATION_METHODS["highest-first"];
+
 export const numberFrom = (value) => {
   const parsed = Number.parseFloat(String(value).replace(/,/g, ""));
   return Number.isFinite(parsed) && parsed >= 0 ? parsed : 0;
@@ -38,12 +44,13 @@ export function unitsFromBill(bill, slabs = SLABS) {
   return perSlab;
 }
 
-function priceAcUnits(perSlab, acUnits, slabs) {
+function priceAcUnits(perSlab, acUnits, slabs, method) {
   let remaining = acUnits;
   let cost = 0;
   const acPerSlab = slabs.map(() => 0);
 
-  for (let index = slabs.length - 1; index >= 0 && remaining > 0; index -= 1) {
+  const step = method === "lowest-first" ? 1 : -1;
+  for (let index = step === 1 ? 0 : slabs.length - 1; index >= 0 && index < slabs.length && remaining > 0; index += step) {
     const units = Math.min(remaining, perSlab[index]);
     acPerSlab[index] = units;
     cost += units * slabs[index].rate;
@@ -53,7 +60,8 @@ function priceAcUnits(perSlab, acUnits, slabs) {
   return { cost, acPerSlab };
 }
 
-export function splitBill(billText, people, slabs = SLABS) {
+export function splitBill(billText, people, slabs = SLABS, method = "highest-first") {
+  if (!Object.hasOwn(CALCULATION_METHODS, method)) throw new Error("Unknown calculation method.");
   const bill = numberFrom(billText);
   const perSlab = unitsFromBill(bill, slabs);
   const totalUnits = perSlab.reduce((sum, units) => sum + units, 0);
@@ -62,12 +70,13 @@ export function splitBill(billText, people, slabs = SLABS) {
   const allocationScale = requestedAcUnits > totalUnits && requestedAcUnits > 0
     ? totalUnits / requestedAcUnits
     : 1;
-  const { cost: acCost, acPerSlab } = priceAcUnits(perSlab, acUnits, slabs);
+  const { cost: acCost, acPerSlab } = priceAcUnits(perSlab, acUnits, slabs, method);
   const acRate = acUnits > 0 ? acCost / acUnits : 0;
   const sharedPerPerson = people.length > 0 ? (bill - acCost) / people.length : 0;
 
   return {
     bill,
+    calculationMethod: method,
     tariffSnapshot: slabs.map((slab) => ({ ...slab })),
     totalUnits,
     perSlab,
